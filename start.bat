@@ -1,0 +1,16 @@
+@echo off
+echo Starting GreenScore...
+
+echo Starting AI Service...
+start "GreenScore AI" cmd /k "cd ai_service && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+echo Starting Backend...
+start "GreenScore Backend" cmd /k "cd backend && npm start"
+
+echo Starting Frontend...
+start "GreenScore Frontend" cmd /k "cd frontend && npm run dev"
+
+echo All services started!
+echo Opening app...
+timeout /t 5
+start http://localhost:5173

@@ -1,0 +1,49 @@
+
+
+services:
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - greenscore-network
+
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/greenscore
+      - JWT_SECRET=dev_secret_key_change_in_prod
+    depends_on:
+      - mongodb
+    networks:
+      - greenscore-network
+
+  ai_service:
+    build: ./ai_service
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+      - MODEL=llama3:8b
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - greenscore-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    networks:
+      - greenscore-network
+
+networks:
+  greenscore-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
