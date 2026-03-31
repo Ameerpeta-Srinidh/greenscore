@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Leaf, Trophy, LayoutDashboard, LogOut, Star } from "lucide-react";
+import { Leaf, Trophy, LayoutDashboard, LogOut, Zap } from "lucide-react";
 
 export default function Layout() {
     const { logout } = useAuth();
@@ -8,77 +8,80 @@ export default function Layout() {
 
     const isActive = (path) => location.pathname === path;
 
-    const navStyle = (path) => ({
-        display: "flex",
-        alignItems: "center",
-        gap: "0.5rem",
-        textDecoration: "none",
-        padding: "0.6rem 1.2rem",
-        borderRadius: "12px",
-        background: isActive(path) ? "var(--primary-light)" : "transparent",
-        color: isActive(path) ? "var(--primary-dark)" : "var(--text-muted)",
-        fontWeight: isActive(path) ? "700" : "500",
-        transition: "all 0.3s ease"
-    });
+    const navLink = (path, icon, label) => (
+        <Link
+            to={path}
+            style={{
+                display: "flex", alignItems: "center", gap: "0.45rem",
+                textDecoration: "none",
+                padding: "0.5rem 1rem",
+                borderRadius: "var(--radius-full)",
+                background: isActive(path) ? "var(--primary-light)" : "transparent",
+                color: isActive(path) ? "var(--primary-dark)" : "var(--text-muted)",
+                fontWeight: isActive(path) ? 700 : 500,
+                fontSize: "0.9rem",
+                transition: "var(--transition)",
+                border: isActive(path) ? "1px solid rgba(16,185,129,0.2)" : "1px solid transparent",
+            }}
+        >
+            {icon}
+            <span className="nav-label">{label}</span>
+        </Link>
+    );
 
     return (
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
-            {/* Top Navigation Bar - Glass Effect */}
-            <header className="glass" style={{
-                padding: "1rem 2rem",
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            {/* Sticky top nav */}
+            <header style={{
+                padding: "0.85rem 2rem",
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                position: "sticky",
-                top: 0,
-                zIndex: 50,
-                borderBottom: "1px solid rgba(255,255,255,0.3)"
+                position: "sticky", top: 0, zIndex: 50,
+                background: "rgba(240,253,244,0.85)",
+                backdropFilter: "blur(16px) saturate(180%)",
+                WebkitBackdropFilter: "blur(16px) saturate(180%)",
+                borderBottom: "1px solid rgba(16,185,129,0.12)",
+                boxShadow: "0 1px 12px rgba(0,0,0,0.05)",
             }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                {/* Brand */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
                     <div style={{
                         background: "linear-gradient(135deg, var(--primary), var(--primary-dark))",
-                        padding: "8px",
-                        borderRadius: "12px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        boxShadow: "0 4px 10px rgba(16, 185, 129, 0.4)"
+                        padding: "8px", borderRadius: "12px",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: "0 4px 10px rgba(16,185,129,0.35)",
                     }}>
-                        <Leaf size={24} color="white" fill="white" />
+                        <Leaf size={22} color="white" fill="white" />
                     </div>
-                    <span style={{ fontSize: "1.4rem", fontWeight: "800", color: "var(--text-main)", letterSpacing: "-0.5px" }}>
+                    <span style={{ fontSize: "1.3rem", fontWeight: 800, letterSpacing: "-0.5px", color: "var(--text-main)" }}>
                         GreenScore<span style={{ color: "var(--primary)" }}>+</span>
                     </span>
                 </div>
 
-                <nav style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                    <Link to="/" style={navStyle("/")}>
-                        <LayoutDashboard size={18} />
-                        <span className="nav-label">Dashboard</span>
-                    </Link>
-                    <Link to="/leaderboard" style={navStyle("/leaderboard")}>
-                        <Trophy size={18} />
-                        <span className="nav-label">Leaderboard</span>
-                    </Link>
-                    <Link to="/challenges" style={navStyle("/challenges")}>
-                        <Star size={18} />
-                        <span className="nav-label">Challenges</span>
-                    </Link>
+                {/* Nav links */}
+                <nav style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
+                    {navLink("/", <LayoutDashboard size={17} />, "Dashboard")}
+                    {navLink("/challenges", <Zap size={17} />, "Challenges")}
+                    {navLink("/leaderboard", <Trophy size={17} />, "Leaderboard")}
                 </nav>
 
+                {/* Logout */}
                 <button
                     onClick={logout}
-                    className="secondary"
-                    style={{ padding: "0.5rem 1rem", fontSize: "0.9rem", borderRadius: "12px" }}
+                    className="btn-ghost btn-sm"
+                    style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
                 >
-                    <LogOut size={16} /> <span className="nav-label">Logout</span>
+                    <LogOut size={16} />
+                    <span className="nav-label">Logout</span>
                 </button>
             </header>
 
-            {/* Main Content Area */}
-            <main style={{ flex: 1, padding: "2rem", width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
+            {/* Content */}
+            <main style={{ flex: 1 }}>
                 <Outlet />
             </main>
         </div>
     );
 }
+

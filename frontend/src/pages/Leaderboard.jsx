@@ -1,63 +1,180 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+
+function getRankEmoji(i) {
+  return i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+}
+
+function getInitials(name) {
+  const clean = name?.split("@")[0] || "U";
+  return clean.slice(0, 2).toUpperCase();
+}
 
 export default function Leaderboard() {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const { auth } = useAuth();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [communityTotal, setCommunityTotal] = useState(null);
 
-    useEffect(() => {
-        api.get("/user/leaderboard")
-            .then(res => setUsers(res.data))
-            .catch(err => console.error(err))
-            .finally(() => setLoading(false));
-    }, []);
+  useEffect(() => {
+    api.get("/user/leaderboard")
+      .then(res => setUsers(res.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
+  if (loading) {
     return (
-        <div className="container">
-            <div className="header">
-                <h1>🏆 Global Leaderboard</h1>
-                <Link to="/" className="button secondary">Back to Dashboard</Link>
-            </div>
-
-            <div className="card">
-                {loading ? (
-                    <p>Loading scores...</p>
-                ) : (
-                    <table style={{ width: "100%", textAlign: "left", borderCollapse: "collapse" }}>
-                        <thead>
-                            <tr style={{ borderBottom: "1px solid #e5e7eb" }}>
-                                <th style={{ padding: "10px" }}>Rank</th>
-                                <th style={{ padding: "10px" }}>User</th>
-                                <th style={{ padding: "10px" }}>GreenScore</th>
-                                <th style={{ padding: "10px" }}>Tier</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map((u, i) => (
-                                <tr key={u.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                                    <td style={{ padding: "10px", fontWeight: "bold" }}>#{i + 1}</td>
-                                    <td style={{ padding: "10px" }}>{u.name}</td>
-                                    <td style={{ padding: "10px", color: "#16a34a", fontWeight: "bold" }}>
-                                        {u.greenScore.toFixed(1)}
-                                    </td>
-                                    <td style={{ padding: "10px" }}>
-                                        <span style={{
-                                            padding: "2px 8px",
-                                            borderRadius: "12px",
-                                            background: u.tier === "premium" ? "#fef3c7" : "#e5e7eb",
-                                            color: u.tier === "premium" ? "#d97706" : "#374151",
-                                            fontSize: "0.8rem"
-                                        }}>
-                                            {u.tier.toUpperCase()}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-        </div>
+      <div className="container" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="skeleton" style={{ height: 80, borderRadius: "var(--radius-lg)" }} />
+        ))}
+      </div>
     );
+  }
+
+  const top3 = users.slice(0, 3);
+  const rest = users.slice(3);
+  const myRank = users.findIndex(u => String(u.id) === String(auth?.userId));
+
+  // Simulated community total (real backend would aggregate)
+  const totalSaved = users.reduce((acc, u) => acc + (u.greenScore || 0), 0);
+
+  return (
+    <div className="container">
+      {/* Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h1>🏆 Global Leaderboard</h1>
+        <p>See how your GreenScore stacks up against other eco-warriors.</p>
+      </div>
+
+      {/* Community Banner */}
+      <div className="ripple-card" style={{ marginBottom: "1.5rem" }}>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <p style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.7)", margin: "0 0 0.25rem", fontWeight: 600 }}>
+            🌍 COMMUNITY IMPACT
+          </p>
+          <h2 style={{ color: "white", margin: "0 0 0.25rem", fontSize: "2rem" }}>
+            {(totalSaved * 21 / 100).toFixed(0)} kg CO₂
+          </h2>
+          <p style={{ color: "rgba(255,255,255,0.8)", margin: 0, fontSize: "0.9rem" }}>
+            equivalent carbon offset generated by our community this month 🌿
+          </p>
+        </div>
+      </div>
+
+      {/* Podium — top 3 */}
+      {top3.length >= 2 && (
+        <div className="card" style={{ marginBottom: "1.5rem" }}>
+          <h3 style={{ textAlign: "center", marginBottom: "0.5rem" }}>🏅 Top Performers</h3>
+          <div className="podium">
+            {/* 2nd */}
+            {top3[1] && (
+              <div className="podium-place podium-2nd">
+                <div className="podium-avatar">{getInitials(top3[1].name)}</div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", textAlign: "center", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {top3[1].name.split("@")[0]}
+                </div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 800 }}>{top3[1].greenScore.toFixed(1)}</div>
+                <div className="podium-block">🥈</div>
+              </div>
+            )}
+            {/* 1st */}
+            {top3[0] && (
+              <div className="podium-place podium-1st">
+                <div className="podium-avatar float">{getInitials(top3[0].name)}</div>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-muted)", textAlign: "center", maxWidth: 88, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {top3[0].name.split("@")[0]}
+                </div>
+                <div style={{ fontSize: "0.95rem", fontWeight: 800 }}>{top3[0].greenScore.toFixed(1)}</div>
+                <div className="podium-block">🥇</div>
+              </div>
+            )}
+            {/* 3rd */}
+            {top3[2] && (
+              <div className="podium-place podium-3rd">
+                <div className="podium-avatar">{getInitials(top3[2].name)}</div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--text-muted)", textAlign: "center", maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {top3[2].name.split("@")[0]}
+                </div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 800 }}>{top3[2].greenScore.toFixed(1)}</div>
+                <div className="podium-block">🥉</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Full table */}
+      <div className="card">
+        <h3 style={{ marginBottom: "1rem" }}>All Rankings</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {users.map((u, i) => {
+            const isMe = String(u.id) === String(auth?.userId);
+            const tierColor = u.tier === "premium" ? "#f59e0b" : "var(--text-muted)";
+
+            return (
+              <div
+                key={u.id}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.75rem",
+                  padding: "0.85rem 1rem", borderRadius: "var(--radius-md)",
+                  background: isMe ? "linear-gradient(135deg, #ecfdf5, #d1fae5)" : "var(--bg-subtle)",
+                  border: isMe ? "2px solid var(--primary)" : "1px solid var(--border)",
+                  transition: "var(--transition)",
+                }}
+              >
+                {/* Rank */}
+                <div style={{ width: 36, textAlign: "center", fontWeight: 800, fontSize: i < 3 ? "1.3rem" : "1rem", flexShrink: 0 }}>
+                  {getRankEmoji(i)}
+                </div>
+
+                {/* Avatar */}
+                <div style={{
+                  width: 38, height: 38, borderRadius: "50%", flexShrink: 0,
+                  background: isMe
+                    ? "linear-gradient(135deg, var(--primary), var(--primary-dark))"
+                    : "linear-gradient(135deg, #94a3b8, #64748b)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "white", fontSize: "0.85rem", fontWeight: 800,
+                }}>
+                  {getInitials(u.name)}
+                </div>
+
+                {/* Name */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    {u.name.split("@")[0]}
+                    {isMe && <span className="badge badge-green" style={{ fontSize: "0.7rem" }}>YOU</span>}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: tierColor, fontWeight: 600 }}>
+                    {u.tier.toUpperCase()}
+                  </div>
+                </div>
+
+                {/* Score */}
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div style={{
+                    fontSize: "1.2rem", fontWeight: 800,
+                    color: i < 3 ? "var(--primary)" : "var(--text-main)",
+                  }}>
+                    {u.greenScore.toFixed(1)}
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>GreenScore</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {myRank === -1 && (
+          <p style={{ textAlign: "center", marginTop: "1rem", color: "var(--text-muted)", fontSize: "0.9rem" }}>
+            You're not on the leaderboard yet. Log some activities to join! 🌱
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }

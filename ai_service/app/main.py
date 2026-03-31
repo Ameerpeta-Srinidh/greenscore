@@ -19,7 +19,7 @@ def parse_text(payload: dict):
         text = payload.get("text")
         if not text:
             raise HTTPException(status_code=400, detail="Text is required")
-        
+
         raw = call_llm(text)
         print(f"DEBUG: LLM Raw Output: {raw}")
         parsed = parse_response(raw)
@@ -31,37 +31,37 @@ def parse_text(payload: dict):
         return parsed
     except HTTPException:
         raise
+    except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 @app.post("/analyze")
 def analyze_stats(payload: dict):
-    from app.prompt import ANALYSIS_PROMPT
     import json
-    
+
     try:
         stats = payload.get("stats")
         if not stats:
-             raise HTTPException(status_code=400, detail="Stats are required")
+            raise HTTPException(status_code=400, detail="Stats are required")
 
-        # Format the prompt with the user's stats
-        user_input = json.dumps(stats, indent=2)
-        
-        # Call LLM with the new system prompt logic
-        response_text = call_llm(user_input, system_prompt=ANALYSIS_PROMPT)
-        
-        # Parse logic
-        try:
-            clean_text = response_text.replace("```json", "").replace("```", "").strip()
-            if "{" not in clean_text:
-                 # sometimes LLM just returns text
-                 return {"tips": [clean_text[:100]]}
-            
-            result = json.loads(clean_text)
-            return result
-        except:
-             # Fallback
-            return {"tips": ["Reduce travel emissions.", "Conserve electricity.", "Consider plant-based options."]}
-            
+        breakdown = stats.get("breakdown", {})
+        total = stats.get("totalCarbon", 0)
+
+        tips = []
+        if breakdown.get("travel", 0) > total * 0.4:
+            tips.append("Your biggest emissions come from travel. Try public transport or carpooling.")
+        if breakdown.get("electricity", 0) > total * 0.3:
+            tips.append("High electricity usage detected. Set AC to 24°C and use LED bulbs.")
+        if breakdown.get("food", 0) > total * 0.2:
+            tips.append("Food emissions are significant. Adding one plant-based meal per week saves ~2.5 kg CO₂.")
+        if breakdown.get("shopping", 0) > total * 0.2:
+            tips.append("Shopping is contributing to your footprint. Consider buying second-hand items.")
+        if not tips:
+            tips.append("Great work! Keep logging activities to get personalized tips.")
+            tips.append("Try setting a monthly carbon goal to stay on track.")
+
+        return {"tips": tips}
+
     except Exception as e:
         print(f"Analysis failed: {e}")
-        return {"tips": []}
+        return {"tips": ["Keep logging activities to get personalized eco tips!"]}

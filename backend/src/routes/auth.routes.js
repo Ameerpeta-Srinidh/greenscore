@@ -59,7 +59,7 @@ router.post("/login", validate(loginSchema), async (req, res, next) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-    res.json({ token });
+    res.json({ token, userId: user._id });
   } catch (err) {
     next(err);
   }

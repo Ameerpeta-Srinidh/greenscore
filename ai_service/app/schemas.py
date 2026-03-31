@@ -7,3 +7,6 @@ class ParsedActivity(BaseModel):
     distance_km: Optional[float] = None
     electricity_kwh: Optional[float] = None
     food_type: Optional[str] = None
+    item_type: Optional[str] = None
+    recommendation: Optional[str] = None
+    potential_savings_kg: Optional[float] = None

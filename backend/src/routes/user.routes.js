@@ -38,6 +38,23 @@ const SYSTEM_CHALLENGES = [
     { id: "c4", title: "Zero Waste", description: "Avoid packaged food for 5 meals.", target: 5, reward: 60, icon: "Trash2" },
 ];
 
+// GET /user/me - Authenticated user profile + challenges
+router.get("/me", authenticate, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId, "email greenScore tier challenges");
+        if (!user) return res.status(404).json({ error: "User not found" });
+        res.json({
+            id: user._id,
+            email: user.email,
+            greenScore: user.greenScore || 0,
+            tier: user.tier,
+            challenges: user.challenges || []
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to fetch user" });
+    }
+});
+
 router.get("/challenges", (req, res) => {
     res.json(SYSTEM_CHALLENGES);
 });

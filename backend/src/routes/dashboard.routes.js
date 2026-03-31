@@ -6,6 +6,9 @@ const router = express.Router();
 
 router.get("/:userId", async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
     const userId = new mongoose.Types.ObjectId(req.params.userId);
 
     // -------- Time range handling --------

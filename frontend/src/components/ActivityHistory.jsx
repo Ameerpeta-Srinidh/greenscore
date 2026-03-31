@@ -1,88 +1,98 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
+import { getCarbonEquivalentShort, TYPE_ICONS, TYPE_CLASS } from "../utils/carbonContext";
+import { Trash2 } from "lucide-react";
 
 export default function ActivityHistory({ userId, refreshTrigger, onActivityDeleted }) {
-    const [activities, setActivities] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    // Load activities when userId updates or a new activity is added (refreshTrigger changes)
-    useEffect(() => {
-        if (userId) {
-            setLoading(true);
-            api.get(`/activity/user/${userId}`)
-                .then(res => setActivities(res.data))
-                .catch(err => console.error("Failed to load history", err))
-                .finally(() => setLoading(false));
-        }
-    }, [userId, refreshTrigger]);
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+    api.get(`/activity/user/${userId}`)
+      .then(res => setActivities(res.data))
+      .catch(err => console.error("Failed to load history", err))
+      .finally(() => setLoading(false));
+  }, [userId, refreshTrigger]);
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this activity?")) return;
+  const handleDelete = async (id) => {
+    if (!window.confirm("Remove this activity?")) return;
+    try {
+      await api.delete(`/activity/${id}`);
+      setActivities(prev => prev.filter(a => a._id !== id));
+      if (onActivityDeleted) onActivityDeleted();
+    } catch {
+      alert("Failed to delete");
+    }
+  };
 
-        try {
-            await api.delete(`/activity/${id}`);
-            // Remove from local list immediately
-            setActivities(prev => prev.filter(a => a._id !== id));
-            // Notify parent to refresh stats
-            if (onActivityDeleted) onActivityDeleted();
-        } catch (err) {
-            alert("Failed to delete activity");
-            console.error(err);
-        }
-    };
-
-    if (loading) return <p>Loading history...</p>;
-    if (activities.length === 0) return <p className="text-gray-500">No activities yet.</p>;
-
+  if (loading) {
     return (
-        <div className="card">
-            <h3>📜 Recent Activities</h3>
-            <div style={{ maxHeight: "300px", overflowY: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
-                    <thead>
-                        <tr style={{ background: "#f9fafb", textAlign: "left" }}>
-                            <th style={{ padding: "8px" }}>Activity</th>
-                            <th style={{ padding: "8px" }}>Carbon</th>
-                            <th style={{ padding: "8px" }}>Type</th>
-                            <th style={{ padding: "8px" }}>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {activities.map(a => (
-                            <tr key={a._id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                                <td style={{ padding: "8px" }}>{a.rawText}</td>
-                                <td style={{ padding: "8px", fontWeight: "bold", color: "#dc2626" }}>
-                                    {a.carbonKg.toFixed(2)} kg
-                                </td>
-                                <td style={{ padding: "8px" }}>
-                                    <span style={{
-                                        background: "#e5e7eb",
-                                        padding: "2px 6px",
-                                        borderRadius: "4px",
-                                        fontSize: "0.75rem"
-                                    }}>
-                                        {a.type}
-                                    </span>
-                                </td>
-                                <td style={{ padding: "8px" }}>
-                                    <button
-                                        onClick={() => handleDelete(a._id)}
-                                        style={{
-                                            background: "none",
-                                            border: "none",
-                                            cursor: "pointer",
-                                            color: "#9ca3af"
-                                        }}
-                                        title="Delete"
-                                    >
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+      <div className="card">
+        <h3>📜 Recent Activities</h3>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="skeleton" style={{ height: 56, marginBottom: "0.5rem" }} />
+        ))}
+      </div>
     );
+  }
+
+  if (activities.length === 0) {
+    return (
+      <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "0.75rem" }}>🌱</div>
+        <h3>No activities yet</h3>
+        <p>Tap the <strong>+</strong> button to log your first activity!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card">
+      <h3 style={{ marginBottom: "1rem" }}>📜 Recent Activities</h3>
+      <div style={{ maxHeight: 400, overflowY: "auto", paddingRight: "0.25rem" }}>
+        {activities.map(a => {
+          const typeKey = (a.type || "other").toLowerCase();
+          const icon = TYPE_ICONS[typeKey] || "📦";
+          const iconClass = TYPE_CLASS[typeKey] || "other";
+          const equiv = getCarbonEquivalentShort(a.carbonKg);
+          const date = new Date(a.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+          return (
+            <div key={a._id} className="activity-item">
+              {/* Icon */}
+              <div className={`activity-icon activity-icon-${iconClass}`}>
+                {icon}
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: "0.9rem", color: "var(--text-main)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {a.rawText}
+                </div>
+                <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap", marginTop: "0.2rem", alignItems: "center" }}>
+                  <span className="badge badge-red" style={{ fontSize: "0.72rem" }}>
+                    {a.carbonKg.toFixed(2)} kg CO₂
+                  </span>
+                  {equiv && <span className="equiv-chip">{equiv}</span>}
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{date}</span>
+                </div>
+              </div>
+
+              {/* Delete */}
+              <button
+                onClick={() => handleDelete(a._id)}
+                className="btn-ghost btn-sm"
+                style={{ borderRadius: "50%", width: 32, height: 32, padding: 0, flexShrink: 0, border: "none" }}
+                title="Delete"
+              >
+                <Trash2 size={15} color="var(--text-light)" />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
