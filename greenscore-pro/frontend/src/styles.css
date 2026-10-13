@@ -1,0 +1,166 @@
+:root {
+  font-family: "Segoe UI", sans-serif;
+  color: #193126;
+  background: linear-gradient(180deg, #eef9f1 0%, #f8fcf8 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 16px;
+  padding: 0.9rem 1.1rem;
+  font-weight: 700;
+  color: white;
+  background: #2d6a4f;
+  cursor: pointer;
+}
+
+input {
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid #c8dacc;
+}
+
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: stretch;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2d6a4f;
+  font-weight: 700;
+}
+
+.hero h1 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+}
+
+.score-card,
+.panel {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(28, 62, 48, 0.1);
+  border-radius: 24px;
+  box-shadow: 0 18px 45px rgba(27, 68, 52, 0.08);
+}
+
+.score-card {
+  min-width: 220px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, #1b4332, #40916c);
+  color: white;
+}
+
+.score-card strong {
+  font-size: 3.2rem;
+  line-height: 1;
+  margin: 0.4rem 0;
+}
+
+.score-card small {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+}
+
+.panel {
+  padding: 1.25rem;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.dashboard {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.stats strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.75rem;
+}
+
+.stats p {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+  border-radius: 18px;
+  background: #f1f7f2;
+  color: #365247;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.chart-card {
+  min-height: 340px;
+}
+
+.error {
+  color: #b42318;
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .grid,
+  .charts,
+  .stats {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+
+  .score-card {
+    min-width: 0;
+  }
+}

@@ -1,39 +1,54 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
-    const [auth, setAuth] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const saved = localStorage.getItem("auth");
-        if (saved) {
-            try {
-                setAuth(JSON.parse(saved));
-            } catch (e) {
-                console.error("Failed to parse auth", e);
-                localStorage.removeItem("auth");
-            }
+export function AuthProvider({ children }) {
+  const [auth, setAuth] = useState(() => {
+    try {
+      const stored = localStorage.getItem("auth");
+      if (!stored) return null;
+      const parsed = JSON.parse(stored);
+      
+      // Recalculate trial status from stored data
+      if (parsed.trialEndsAt) {
+        const now = new Date();
+        const trialEnd = new Date(parsed.trialEndsAt);
+        if (now < trialEnd) {
+          parsed.trialActive = true;
+          parsed.trialDaysLeft = Math.ceil((trialEnd - now) / 86400000);
+        } else {
+          parsed.trialActive = false;
+          parsed.trialDaysLeft = 0;
         }
-        setLoading(false);
-    }, []);
+      }
+      
+      return parsed;
+    } catch { return null; }
+  });
 
-    const login = (data) => {
-        localStorage.setItem("auth", JSON.stringify(data));
-        setAuth(data);
-    };
+  const login = (data) => {
+    localStorage.setItem("auth", JSON.stringify(data));
+    setAuth(data);
+  };
 
-    const logout = () => {
-        localStorage.removeItem("auth");
-        setAuth(null);
-    };
+  const logout = () => {
+    localStorage.removeItem("auth");
+    setAuth(null);
+  };
 
-    return (
-        <AuthContext.Provider value={{ auth, login, logout, loading }}>
-            {!loading && children}
-        </AuthContext.Provider>
-    );
-};
+  const updateAuth = (updates) => {
+    setAuth(prev => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem("auth", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
-export const useAuth = () => useContext(AuthContext);
+  return (
+    <AuthContext.Provider value={{ auth, login, logout, updateAuth }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() { return useContext(AuthContext); }

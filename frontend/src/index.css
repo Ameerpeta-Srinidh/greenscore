@@ -768,6 +768,183 @@ label {
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* ═══════════════════════════════════════════
+   CSV IMPORT
+════════════════════════════════════════════ */
+.csv-dropzone {
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 1.5rem;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--bg-subtle);
+}
+.csv-dropzone:hover, .csv-dropzone-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.csv-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.csv-preview-table th {
+  background: #f1f5f9;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+}
+.csv-preview-table td {
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+}
+.csv-preview-table tr:hover td {
+  background: var(--primary-light);
+}
+.csv-result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+.csv-result-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+.csv-result-num {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.csv-result-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════
+   REPORT EXPORT
+════════════════════════════════════════════ */
+.report-stat-box {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  border: 1px solid rgba(16,185,129,0.15);
+}
+.report-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+}
+.report-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════
+   EMISSION FACTOR LIBRARY
+════════════════════════════════════════════ */
+.ef-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+.ef-card {
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+.ef-card:hover {
+  background: white;
+  box-shadow: var(--shadow-sm);
+  border-color: var(--border-strong);
+}
+.ef-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.ef-card-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+.ef-card-value {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.ef-card-value small {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.7;
+}
+.ef-bar-track {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.ef-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.8s ease;
+}
+.ef-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ef-table th {
+  background: var(--bg-subtle);
+  padding: 0.65rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  border-bottom: 2px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.ef-table td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.ef-table tr:hover td {
+  background: var(--primary-light);
+}
+
+/* ═══════════════════════════════════════════
+   SPIN ANIMATION
+════════════════════════════════════════════ */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 1s linear infinite; }
+
+/* bg-card for team member cards */
+:root {
+  --bg-card: #f8fafc;
+}
+
+/* ═══════════════════════════════════════════
    RESPONSIVE
 ════════════════════════════════════════════ */
 @media (max-width: 640px) {

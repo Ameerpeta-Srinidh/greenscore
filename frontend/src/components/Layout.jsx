@@ -1,87 +1,140 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Leaf, Trophy, LayoutDashboard, LogOut, Zap } from "lucide-react";
+import {
+  Leaf, LayoutDashboard, Trophy, Target, FileText, Users,
+  BookOpen, Shield, History, CreditCard, LogOut, Crown, Zap
+} from "lucide-react";
+
+const NAV_ITEMS = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/compliance", label: "BRSR", icon: Shield },
+  { to: "/reports", label: "Reports", icon: FileText },
+  { to: "/audit-trail", label: "Audit Trail", icon: History },
+  { to: "/team", label: "Team", icon: Users },
+  { to: "/challenges", label: "Challenges", icon: Target },
+  { to: "/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/emission-factors", label: "Factors", icon: BookOpen },
+];
 
 export default function Layout() {
-    const { logout } = useAuth();
-    const location = useLocation();
+  const { auth, logout } = useAuth();
+  const navigate = useNavigate();
 
-    const isActive = (path) => location.pathname === path;
+  const tier = auth?.tier || "free";
+  const trialActive = auth?.trialActive;
+  const trialDaysLeft = auth?.trialDaysLeft || 0;
 
-    const navLink = (path, icon, label) => (
-        <Link
-            to={path}
+  const handleLogout = () => { logout(); navigate("/login"); };
+
+  return (
+    <>
+      {/* Trial Banner */}
+      {trialActive && (
+        <div style={{
+          background: "linear-gradient(90deg, #10b981, #059669, #6366f1)",
+          color: "white", textAlign: "center",
+          padding: "0.5rem 1rem", fontSize: "0.85rem", fontWeight: 600,
+          display: "flex", justifyContent: "center", alignItems: "center", gap: "0.75rem",
+          flexWrap: "wrap",
+        }}>
+          <Zap size={14} />
+          Free Trial — {trialDaysLeft} days left. All Business features unlocked!
+          <button onClick={() => navigate("/pricing")}
             style={{
-                display: "flex", alignItems: "center", gap: "0.45rem",
-                textDecoration: "none",
-                padding: "0.5rem 1rem",
-                borderRadius: "var(--radius-full)",
-                background: isActive(path) ? "var(--primary-light)" : "transparent",
-                color: isActive(path) ? "var(--primary-dark)" : "var(--text-muted)",
-                fontWeight: isActive(path) ? 700 : 500,
-                fontSize: "0.9rem",
-                transition: "var(--transition)",
-                border: isActive(path) ? "1px solid rgba(16,185,129,0.2)" : "1px solid transparent",
-            }}
-        >
-            {icon}
-            <span className="nav-label">{label}</span>
-        </Link>
-    );
-
-    return (
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            {/* Sticky top nav */}
-            <header style={{
-                padding: "0.85rem 2rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                position: "sticky", top: 0, zIndex: 50,
-                background: "rgba(240,253,244,0.85)",
-                backdropFilter: "blur(16px) saturate(180%)",
-                WebkitBackdropFilter: "blur(16px) saturate(180%)",
-                borderBottom: "1px solid rgba(16,185,129,0.12)",
-                boxShadow: "0 1px 12px rgba(0,0,0,0.05)",
+              background: "rgba(255,255,255,0.2)", color: "white",
+              padding: "0.25rem 0.75rem", fontSize: "0.78rem",
+              borderRadius: "999px", border: "1px solid rgba(255,255,255,0.3)",
             }}>
-                {/* Brand */}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
-                    <div style={{
-                        background: "linear-gradient(135deg, var(--primary), var(--primary-dark))",
-                        padding: "8px", borderRadius: "12px",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        boxShadow: "0 4px 10px rgba(16,185,129,0.35)",
-                    }}>
-                        <Leaf size={22} color="white" fill="white" />
-                    </div>
-                    <span style={{ fontSize: "1.3rem", fontWeight: 800, letterSpacing: "-0.5px", color: "var(--text-main)" }}>
-                        GreenScore<span style={{ color: "var(--primary)" }}>+</span>
-                    </span>
-                </div>
-
-                {/* Nav links */}
-                <nav style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
-                    {navLink("/", <LayoutDashboard size={17} />, "Dashboard")}
-                    {navLink("/challenges", <Zap size={17} />, "Challenges")}
-                    {navLink("/leaderboard", <Trophy size={17} />, "Leaderboard")}
-                </nav>
-
-                {/* Logout */}
-                <button
-                    onClick={logout}
-                    className="btn-ghost btn-sm"
-                    style={{ fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.4rem" }}
-                >
-                    <LogOut size={16} />
-                    <span className="nav-label">Logout</span>
-                </button>
-            </header>
-
-            {/* Content */}
-            <main style={{ flex: 1 }}>
-                <Outlet />
-            </main>
+            Subscribe Now
+          </button>
         </div>
-    );
-}
+      )}
 
+      {/* Header */}
+      <header className="glass" style={{
+        padding: "0.75rem 1.5rem",
+        borderBottom: "1px solid var(--border)",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        position: "sticky", top: 0, zIndex: 50,
+      }}>
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <div style={{
+            background: "linear-gradient(135deg, #10b981, #059669)",
+            padding: "7px", borderRadius: "10px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Leaf size={18} color="white" fill="white" />
+          </div>
+          <span style={{ fontWeight: 800, fontSize: "1.1rem", letterSpacing: "-0.3px" }}>
+            GreenScore<span style={{ color: "var(--primary)" }}>+</span>
+          </span>
+          {tier !== "free" && (
+            <span style={{
+              background: tier === "enterprise" ? "#8b5cf6" : tier === "business" ? "#10b981" : "#0ea5e9",
+              color: "white", padding: "2px 8px", borderRadius: "6px",
+              fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase",
+            }}>
+              {tier}
+            </span>
+          )}
+        </div>
+
+        {/* Nav */}
+        <nav style={{ display: "flex", gap: "0.15rem", overflowX: "auto", flex: 1, justifyContent: "center" }}>
+          {NAV_ITEMS.map(item => {
+            const Icon = item.icon;
+            return (
+              <NavLink key={item.to} to={item.to} end={item.to === "/"}
+                style={({ isActive }) => ({
+                  display: "flex", alignItems: "center", gap: "0.35rem",
+                  padding: "0.5rem 0.7rem", borderRadius: "8px",
+                  fontSize: "0.82rem", fontWeight: 600,
+                  textDecoration: "none", whiteSpace: "nowrap",
+                  color: isActive ? "var(--primary)" : "var(--text-muted)",
+                  background: isActive ? "var(--primary-light)" : "transparent",
+                  transition: "all 0.2s",
+                })}>
+                <Icon size={15} />
+                <span className="nav-label">{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {(tier === "free" && !trialActive) && (
+            <button onClick={() => navigate("/pricing")}
+              style={{
+                background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                padding: "0.4rem 0.9rem", fontSize: "0.78rem",
+                display: "flex", alignItems: "center", gap: "0.3rem",
+                boxShadow: "0 2px 8px rgba(245,158,11,0.3)",
+              }}>
+              <Crown size={13} /> Upgrade
+            </button>
+          )}
+          <NavLink to="/pricing"
+            style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.5rem 0.7rem",
+              borderRadius: "8px", fontSize: "0.82rem", fontWeight: 600,
+              textDecoration: "none", color: "var(--text-muted)" }}>
+            <CreditCard size={15} />
+            <span className="nav-label">Billing</span>
+          </NavLink>
+          <button onClick={handleLogout}
+            className="btn-ghost btn-sm"
+            style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <LogOut size={14} />
+            <span className="nav-label">Logout</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Main */}
+      <main style={{ padding: "1rem 0" }}>
+        <Outlet />
+      </main>
+    </>
+  );
+}

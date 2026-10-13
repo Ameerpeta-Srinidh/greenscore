@@ -7,11 +7,13 @@ import BudgetGauge from "../components/BudgetGauge";
 import ScoreRing from "../components/ScoreRing";
 import CoachPanel from "../components/CoachPanel";
 import StreakBadge from "../components/StreakBadge";
+import BenchmarkCard from "../components/BenchmarkCard";
+import CsvImport from "../components/CsvImport";
 import { updateStreak } from "../components/StreakBadge";
 import { getCarbonEquivalentShort } from "../utils/carbonContext";
 import { useAuth } from "../context/AuthContext";
-import { Mic, Plus, X, TrendingUp, Activity, Zap } from "lucide-react";
-import { Pie, Line } from "react-chartjs-2";
+import { Mic, Plus, X, TrendingUp, Activity, Zap, Upload, Users, Building2 } from "lucide-react";
+import { Pie, Line, Doughnut } from "react-chartjs-2";
 import {
   Chart as ChartJS, ArcElement, LineElement, CategoryScale,
   LinearScale, Tooltip, Legend, PointElement, Filler,
@@ -98,7 +100,7 @@ function AddActivityModal({ userId, onAdded, onClose }) {
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
           <input
             value={text}
-            placeholder='e.g. "Drove 15 km to office" or "Had a chicken meal"'
+            placeholder='e.g. "Drove 15 km to office" or "Had chicken biryani"'
             onChange={e => setText(e.target.value)}
             onKeyDown={e => e.key === "Enter" && !loading && submit()}
             autoFocus
@@ -143,14 +145,18 @@ export default function Dashboard() {
 
   const [data, setData] = useState(null);
   const [range, setRange] = useState("30d");
+  const [viewScope, setViewScope] = useState("personal");
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
+
+  const hasOrg = !!auth?.organizationId;
 
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/dashboard/${userId}?range=${range}`);
+      const res = await api.get(`/dashboard/${userId}?range=${range}&scope=${viewScope}`);
       setData(res.data);
     } catch (e) {
       console.error(e);
@@ -167,7 +173,7 @@ export default function Dashboard() {
     } else {
       setLoading(false);
     }
-  }, [range, userId]);
+  }, [range, userId, viewScope]);
 
   if (!userId && !loading) {
     return (
@@ -189,7 +195,7 @@ export default function Dashboard() {
     );
   }
 
-  const { totalCarbon = 0, count = 0, breakdown = {}, daily = {}, suggestions = [], greenScore = 0 } = data;
+  const { totalCarbon = 0, count = 0, breakdown = {}, daily = {}, suggestions = [], greenScore = 0, scopeBreakdown, benchmark } = data;
   const equiv = getCarbonEquivalentShort(totalCarbon);
 
   // Compute days active for budget gauge
@@ -225,16 +231,30 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Range */}
-          <select
-            value={range}
-            onChange={e => setRange(e.target.value)}
-            style={{ width: "auto", margin: 0 }}
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="all">All time</option>
-          </select>
+          {/* Controls */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <select
+              value={range}
+              onChange={e => setRange(e.target.value)}
+              style={{ width: "auto", margin: 0 }}
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="all">All time</option>
+            </select>
+
+            {hasOrg && (
+              <select
+                value={viewScope}
+                onChange={e => setViewScope(e.target.value)}
+                style={{ width: "auto", margin: 0, fontSize: "0.82rem" }}
+              >
+                <option value="personal">👤 My Data</option>
+                <option value="org">🏢 Team Data</option>
+              </select>
+            )}
+          </div>
         </div>
 
         {/* ── Eco City ── */}
@@ -245,6 +265,55 @@ export default function Dashboard() {
           <BudgetGauge monthlyKg={totalCarbon} daysLogged={daysActive} />
           <GoalCard userId={userId} totalCarbon={totalCarbon} />
         </div>
+
+        {/* ── Scope Breakdown (Scope 1/2/3) ── */}
+        {scopeBreakdown && (
+          <div className="card" style={{ marginTop: "1.5rem" }}>
+            <h3 style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Zap size={18} color="var(--primary)" /> GHG Scope Breakdown
+            </h3>
+            <div style={{ display: "flex", gap: "1.5rem", alignItems: "center", flexWrap: "wrap" }}>
+              <div style={{ width: 160, height: 160 }}>
+                <Doughnut
+                  data={{
+                    labels: ["Scope 1 (Direct)", "Scope 2 (Electricity)", "Scope 3 (Value Chain)"],
+                    datasets: [{
+                      data: [scopeBreakdown["1"] || 0, scopeBreakdown["2"] || 0, scopeBreakdown["3"] || 0],
+                      backgroundColor: ["#ef4444", "#3b82f6", "#8b5cf6"],
+                      borderWidth: 2, borderColor: "white",
+                    }],
+                  }}
+                  options={{ maintainAspectRatio: true, plugins: { legend: { display: false } } }}
+                />
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.75rem", minWidth: 200 }}>
+                {[
+                  { label: "Scope 1 — Direct", value: scopeBreakdown["1"] || 0, color: "#ef4444", desc: "Company vehicles, on-site fuel" },
+                  { label: "Scope 2 — Electricity", value: scopeBreakdown["2"] || 0, color: "#3b82f6", desc: "Purchased electricity & heating" },
+                  { label: "Scope 3 — Value Chain", value: scopeBreakdown["3"] || 0, color: "#8b5cf6", desc: "Travel, food, supply chain" },
+                ].map((s, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                    <div style={{ width: 12, height: 12, borderRadius: "50%", background: s.color, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontWeight: 600, fontSize: "0.88rem" }}>{s.label}</span>
+                        <span style={{ fontWeight: 700, color: s.color }}>{s.value.toFixed(1)} kg</span>
+                      </div>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--text-muted)" }}>{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Benchmark ── */}
+        {benchmark && (
+          <div style={{ marginTop: "1.5rem" }}>
+            <BenchmarkCard benchmark={benchmark} />
+          </div>
+        )}
 
         {/* ── Coach Panel ── */}
         <div style={{ marginTop: "1.5rem" }}>
@@ -318,22 +387,47 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── FAB ── */}
-      <button
-        className="fab"
-        onClick={() => setShowAddModal(true)}
-        title="Log Activity"
-        aria-label="Log new activity"
-      >
-        <Plus size={28} />
-      </button>
+      {/* ── FABs ── */}
+      <div style={{ position: "fixed", bottom: 24, right: 24, display: "flex", flexDirection: "column", gap: "0.75rem", zIndex: 100 }}>
+        <button
+          className="fab-secondary"
+          onClick={() => setShowCsvImport(true)}
+          title="Import CSV"
+          aria-label="Import CSV data"
+          style={{
+            width: 48, height: 48, borderRadius: "50%",
+            background: "linear-gradient(135deg, #6366f1, #4f46e5)",
+            color: "white", border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 14px rgba(99,102,241,0.4)",
+            transition: "all 0.2s",
+          }}
+        >
+          <Upload size={20} />
+        </button>
+        <button
+          className="fab"
+          onClick={() => setShowAddModal(true)}
+          title="Log Activity"
+          aria-label="Log new activity"
+        >
+          <Plus size={28} />
+        </button>
+      </div>
 
-      {/* ── Add Activity Modal ── */}
+      {/* ── Modals ── */}
       {showAddModal && (
         <AddActivityModal
           userId={userId}
           onAdded={handleAdded}
           onClose={() => setShowAddModal(false)}
+        />
+      )}
+      {showCsvImport && (
+        <CsvImport
+          userId={userId}
+          onImported={handleAdded}
+          onClose={() => setShowCsvImport(false)}
         />
       )}
     </>

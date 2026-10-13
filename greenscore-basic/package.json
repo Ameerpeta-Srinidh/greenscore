@@ -1,0 +1,19 @@
+{
+  "name": "greenscore-basic",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Frontend-only carbon footprint calculator for beginner-friendly GreenScore demos.",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.2.4"
+  }
+}

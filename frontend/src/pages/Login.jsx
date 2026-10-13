@@ -18,7 +18,20 @@ export default function Login() {
     setError(""); setLoading(true);
     try {
       const res = await api.post("/auth/login", { email, password });
-      login({ token: res.data.token, userId: res.data.userId });
+      login({
+        token: res.data.token,
+        userId: res.data.userId,
+        email: res.data.email,
+        name: res.data.name,
+        companyName: res.data.companyName,
+        organizationId: res.data.organizationId,
+        orgRole: res.data.orgRole,
+        tier: res.data.tier,
+        state: res.data.state,
+        trialActive: res.data.trialActive,
+        trialDaysLeft: res.data.trialDaysLeft,
+        trialEndsAt: res.data.trialEndsAt,
+      });
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.error || "Login failed. Check your credentials.");
@@ -34,7 +47,6 @@ export default function Login() {
         width: "100%", maxWidth: 420,
         position: "relative", zIndex: 1,
       }}>
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "2rem" }}>
           <div style={{
             width: 56, height: 56, borderRadius: "50%",
@@ -47,7 +59,7 @@ export default function Login() {
           </div>
           <h1 style={{ color: "white", margin: "0 0 0.25rem", fontSize: "1.75rem" }}>GreenScore+</h1>
           <p style={{ color: "rgba(255,255,255,0.7)", margin: 0, fontSize: "0.9rem" }}>
-            Track your carbon footprint the smart way.
+            India's ESG Reporting Platform for SMEs
           </p>
         </div>
 
@@ -63,32 +75,19 @@ export default function Login() {
 
         <form onSubmit={submit}>
           <label style={{ color: "rgba(255,255,255,0.85)" }}>Email</label>
-          <input
-            id="login-email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
+          <input id="login-email" type="email" placeholder="you@company.com"
+            value={email} onChange={e => setEmail(e.target.value)}
             style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.25)", color: "white" }}
           />
 
           <label style={{ color: "rgba(255,255,255,0.85)", marginTop: "0.75rem" }}>Password</label>
-          <input
-            id="login-password"
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
+          <input id="login-password" type="password" placeholder="••••••••"
+            value={password} onChange={e => setPassword(e.target.value)}
             style={{ background: "rgba(255,255,255,0.15)", border: "1.5px solid rgba(255,255,255,0.25)", color: "white" }}
           />
 
-          <button
-            id="login-submit"
-            type="submit"
-            disabled={loading}
-            className="btn-lg"
-            style={{ width: "100%", marginTop: "1.25rem", background: "linear-gradient(135deg, #10b981, #059669)" }}
-          >
+          <button id="login-submit" type="submit" disabled={loading}
+            className="btn-lg" style={{ width: "100%", marginTop: "1.25rem", background: "linear-gradient(135deg, #10b981, #059669)" }}>
             {loading ? "Signing in…" : "Sign In 🌿"}
           </button>
         </form>
@@ -96,7 +95,7 @@ export default function Login() {
         <p style={{ textAlign: "center", marginTop: "1.25rem", color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
           No account?{" "}
           <Link to="/register" style={{ color: "#6ee7b7", fontWeight: 700, textDecoration: "none" }}>
-            Sign up for free
+            Start free trial
           </Link>
         </p>
       </div>

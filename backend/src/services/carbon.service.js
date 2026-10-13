@@ -1,48 +1,57 @@
-const EMISSION_FACTORS = {
-  travel: {
-    bike: 0,
-    bus: 0.08,
-    car: 0.21
-  },
-  electricity: 0.82, // kg CO2 per kWh (India avg)
-  food: {
-    veg: 1.5,
-    "non-veg": 3.3,
-    packaged: 2.5
-  },
-  shopping: {
-    clothing: 15,
-    electronics: 150,
-    furniture: 50,
-    other: 10
-  }
-};
+/**
+ * Carbon Calculation Service
+ * Uses Indian emission factor library for accurate, scope-classified calculations.
+ */
 
-function calculateCarbon(data) {
+const {
+  getElectricityFactor,
+  getTransportFactor,
+  getFoodFactor,
+  getShoppingFactor,
+} = require("../data/emissionFactors");
+
+/**
+ * Calculate carbon emissions for a parsed activity
+ * @param {Object} data - Parsed activity data
+ * @param {string} [state] - Indian state for electricity factor lookup
+ * @returns {{ carbonKg: number, scope: number }}
+ */
+function calculateCarbon(data, state) {
   if (data.type === "travel") {
-    return (data.distance_km || 0) *
-      (EMISSION_FACTORS.travel[data.mode] || 0.1);
+    const transport = getTransportFactor(data.mode);
+    const distance = data.distance_km || 0;
+    return {
+      carbonKg: Math.round(distance * transport.factor * 100) / 100,
+      scope: transport.scope,
+    };
   }
 
   if (data.type === "electricity") {
-    return (data.electricity_kwh || 0) *
-      EMISSION_FACTORS.electricity;
+    const factor = getElectricityFactor(state);
+    const kwh = data.electricity_kwh || 0;
+    return {
+      carbonKg: Math.round(kwh * factor * 100) / 100,
+      scope: 2,
+    };
   }
 
   if (data.type === "food") {
-    return EMISSION_FACTORS.food[data.food_type] || 2;
+    const food = getFoodFactor(data.food_type);
+    return {
+      carbonKg: food.factor,
+      scope: food.scope,
+    };
   }
 
   if (data.type === "shopping") {
-    // Basic heuristics based on item type
-    const item = data.item_type || "other";
-    if (item.includes("cloth") || item.includes("shirt") || item.includes("jeans")) return EMISSION_FACTORS.shopping.clothing;
-    if (item.includes("laptop") || item.includes("phone") || item.includes("electronic")) return EMISSION_FACTORS.shopping.electronics;
-    if (item.includes("chair") || item.includes("table") || item.includes("sofa")) return EMISSION_FACTORS.shopping.furniture;
-    return EMISSION_FACTORS.shopping.other;
+    const item = getShoppingFactor(data.item_type);
+    return {
+      carbonKg: item.factor,
+      scope: item.scope,
+    };
   }
 
-  return 0;
+  return { carbonKg: 0, scope: 3 };
 }
 
 module.exports = { calculateCarbon };

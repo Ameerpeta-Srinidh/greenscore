@@ -1,0 +1,11 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: greenscore-premium-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - premium-mongo-data:/data/db
+
+volumes:
+  premium-mongo-data:

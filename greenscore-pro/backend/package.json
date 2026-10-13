@@ -1,0 +1,15 @@
+{
+  "name": "greenscore-pro-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lightweight Express backend for GreenScore Pro footprint calculations.",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  }
+}
